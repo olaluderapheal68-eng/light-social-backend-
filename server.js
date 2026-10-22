@@ -7,7 +7,11 @@ const app=express(); app.disable("x-powered-by"); app.use(helmet());
 app.use(cors({origin:(process.env.CORS_ORIGIN||"*").split(",").map(x=>x.trim()),methods:["GET","POST","PATCH","DELETE","OPTIONS"],allowedHeaders:["Content-Type","Authorization"]}));
 app.use(express.json({limit:"1mb"}));
 const PORT=process.env.PORT||10000;
-const url=process.env.SUPABASE_URL, anon=process.env.SUPABASE_ANON_KEY, service=process.env.SUPABASE_SERVICE_ROLE_KEY;
+const url=console.log("Supabase environment check:", {
+  urlPresent: Boolean(url),
+  anonPresent: Boolean(anon),
+  servicePresent: Boolean(service),
+});process.env.SUPABASE_URL, anon=process.env.SUPABASE_ANON_KEY, service=process.env.SUPABASE_SERVICE_ROLE_KEY;
 let db=null, auth=null;
 if(url&&anon&&service){auth=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false}});db=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});}
 function configured(req,res,next){if(!db||!auth)return res.status(503).json({error:"Supabase is not configured. Add the three Supabase environment variables in Render."});next();}
