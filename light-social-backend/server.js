@@ -150,8 +150,21 @@ app.get("/api/posts/:id", configured, asyncRoute(async (req, res) => {
 app.post("/api/posts", configured, requireUser, asyncRoute(async (req, res) => {
   const content = cleanString(req.body.content, 5000);
   const image_url = cleanString(req.body.image_url, 2048) || null;
-  if (!content && !image_url) return res.status(400).json({ error: "A post must contain text or an image URL." });
-  if (image_url && !/^https?:\/\/\S+$/i.test(image_url)) return res.status(400).json({ error: "Image URL must start with http:// or https://." });
+  if (!content && !image_url) {
+  return res.status(400).json({
+    error: "A post must contain text or media."
+  });
+}
+
+if (
+  image_url &&
+  !/^https?:\/\/\S+$/i.test(image_url) &&
+  !/^[0-9a-f-]{36}\/[^/].+$/i.test(image_url)
+) {
+  return res.status(400).json({
+    error: "Media must be a valid HTTP/HTTPS URL or a Supabase Storage path."
+  });
+}
   const { data, error } = await db.from("posts")
     .insert({ user_id: req.user.id, content, image_url })
     .select("id,user_id,content,image_url,created_at").single();
